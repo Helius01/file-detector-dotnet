@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="File.TypeChecker" Version="3.0.0" />
+    <PackageReference Include="Mime-Detective" Version="22.12.14" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
   </ItemGroup>
 

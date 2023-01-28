@@ -1,7 +1,7 @@
-using FileTypeChecker;
-using FileTypeChecker.Extensions;
-using FileTypeChecker.Types;
+using MimeDetective.Definitions.Licensing;
 using Microsoft.AspNetCore.Mvc;
+using MimeDetective.Storage;
+using MimeDetective;
 
 namespace System;
 
@@ -12,25 +12,20 @@ public class UploadController : ControllerBase
     [HttpPost]
     public IActionResult Upload([FromForm] UploadRequest request)
     {
+        var inspector = new ContentInspectorBuilder()
+        {
+            Definitions = MimeDetective.Definitions.Default.All()
+        }.Build();
+
         using var fileStream = request.File.OpenReadStream();
 
-        var isRecognizableType = FileTypeValidator.IsTypeRecognizable(fileStream);
+        var inspectedResult = inspector.Inspect(fileStream);
 
-        if (!isRecognizableType)
-        {
-            return BadRequest(new { message = "Invalid file type" });
-        }
+        var resultByExtension = inspectedResult.ByFileExtension();
+        var resultByMimeType = inspectedResult.ByMimeType();
 
-        var fileType = FileTypeValidator.GetFileType(fileStream);
 
-        var response = new UploadResponse
-        {
-            FileExtension = fileType.Extension,
-            FileName = fileType.Name,
-            IsImage = fileStream.IsImage(),
-            IsMp3 = fileStream.Is<Mp3>()
-        };
 
-        return Ok(response);
+        return Ok(new { mimeType = resultByMimeType.First().MimeType, extension = resultByExtension.First().Extension });
     }
 }
