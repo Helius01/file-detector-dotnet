@@ -22,27 +22,18 @@ public class UploadController : ControllerBase
     [HttpPost]
     public IActionResult Upload([FromForm] UploadRequest request)
     {
-        // var inspector = new ContentInspectorBuilder()
-        // {
-        //     Definitions = MimeDetective.Definitions.Default.FileTypes.Audio.All()
-        // }.Build();
+        var fileStream = request.File.OpenReadStream();
 
-        // using var fileStream = request.File.OpenReadStream();
+        var isImage = _fileDetectorService.IsImage(fileStream);
+        var isAudio = _fileDetectorService.IsAudio(fileStream);
+        var fileType = _fileDetectorService.GetFileType(fileStream);
 
-        // var inspectedResult = inspector.Inspect(fileStream);
-
-        // var resultByExtension = inspectedResult.ByFileExtension();
-        // var resultByMimeType = inspectedResult.ByMimeType();
-
-        // var a = resultByMimeType.First().Matches.First().Definition;
-
-        // var cats = a.File.Categories;
-
-        // var def = _fileDetectorService.GetFileType(request.File.OpenReadStream());
-
-        var isImage = _fileDetectorService.IsImage(request.File.OpenReadStream());
-
-        return Ok(isImage);
+        return Ok(new
+        {
+            isImage = isImage,
+            isAudio = isAudio,
+            fileType = fileType
+        });
 
         // return Ok(new { mimeType = resultByMimeType.First().MimeType, extension = resultByExtension.First().Extension });
     }
