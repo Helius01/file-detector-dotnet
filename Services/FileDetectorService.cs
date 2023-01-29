@@ -6,6 +6,13 @@ namespace Services;
 
 public class FileDetectorService : IFileDetectorService
 {
+    /////////////////   
+    /// Attention!///
+    /////////////////
+    /// If you wanna develop this service by using  ** MimeDetective ** package,
+    /// Notice that always pass the resetPosition flag as true on inspecting a file stream.
+    /// Else the you'll see some unexpected result that make your mind mess
+
     /// <summary>
     /// Returns file type
     /// </summary>
@@ -15,7 +22,7 @@ public class FileDetectorService : IFileDetectorService
     {
         var inspector = GetInspector(DefinitionType.All);
 
-        var inspectorResult = inspector.Inspect(fileStream);
+        var inspectorResult = inspector.Inspect(fileStream, true);
 
         var resultsByMimeType = inspectorResult.ByMimeType();
 
@@ -33,7 +40,7 @@ public class FileDetectorService : IFileDetectorService
     {
         var inspector = GetInspector(DefinitionType.Image);
 
-        var inspectedResult = inspector.Inspect(fileStream);
+        var inspectedResult = inspector.Inspect(fileStream, true);
 
         return inspectedResult.Any();
     }
@@ -47,10 +54,38 @@ public class FileDetectorService : IFileDetectorService
     {
         var inspector = GetInspector(DefinitionType.Audio);
 
-        var inspectedResult = inspector.Inspect(fileStream);
+        var inspectedResult = inspector.Inspect(fileStream, true);
 
         return inspectedResult.Any();
     }
+
+    /// <summary>
+    /// Compare given file extension with inspected file extension
+    /// </summary>
+    /// <param name="fileName">full file name (ex : lorem.png)</param>
+    /// <param name="fileStream">file stream</param>
+    /// <returns>true if the extension of given file equals with inspected file extension else false</returns>
+    public bool IsValidExtension(string fileName, Stream fileStream)
+    {
+        var givenExtension = Path.GetExtension(fileName);
+
+        var inspector = GetInspector(DefinitionType.All);
+
+        var inspectedResult = inspector.Inspect(fileStream, true);
+
+        var result = inspectedResult.ByFileExtension();
+
+        if (!result.Any()) return false;
+
+        var trimmedGivenExtension = givenExtension.StartsWith('.') ? givenExtension.Replace('.', ' ').Trim() : givenExtension;
+
+        return result.First().Extension.ToLowerInvariant() == trimmedGivenExtension.ToLowerInvariant();
+
+    }
+
+    //////////////////////
+    ////** Privates **////
+    //////////////////////
 
     /// <summary>
     /// Returns definitions by type 

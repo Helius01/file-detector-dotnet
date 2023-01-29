@@ -27,14 +27,14 @@ public class UploadController : ControllerBase
         var isImage = _fileDetectorService.IsImage(fileStream);
         var isAudio = _fileDetectorService.IsAudio(fileStream);
         var fileType = _fileDetectorService.GetFileType(fileStream);
+        var hasSameExtension = _fileDetectorService.IsValidExtension(request.File.FileName, fileStream);
 
         return Ok(new
         {
             isImage = isImage,
             isAudio = isAudio,
-            fileType = fileType
+            fileType = fileType,
+            hasSameExtension
         });
-
-        // return Ok(new { mimeType = resultByMimeType.First().MimeType, extension = resultByExtension.First().Extension });
     }
 }
