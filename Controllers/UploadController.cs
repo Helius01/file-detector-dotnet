@@ -1,7 +1,10 @@
-using FileTypeChecker;
-using FileTypeChecker.Extensions;
-using FileTypeChecker.Types;
+using MimeDetective.Definitions.Licensing;
 using Microsoft.AspNetCore.Mvc;
+using MimeDetective.Storage;
+using MimeDetective;
+using System.Collections.Immutable;
+using Services;
+using Models;
 
 namespace System;
 
@@ -9,28 +12,29 @@ namespace System;
 [Route("[controller]")]
 public class UploadController : ControllerBase
 {
+    private readonly IFileDetectorService _fileDetectorService;
+
+    public UploadController(IFileDetectorService fileDetectorService)
+    {
+        _fileDetectorService = fileDetectorService;
+    }
+
     [HttpPost]
     public IActionResult Upload([FromForm] UploadRequest request)
     {
-        using var fileStream = request.File.OpenReadStream();
+        var fileStream = request.File.OpenReadStream();
 
-        var isRecognizableType = FileTypeValidator.IsTypeRecognizable(fileStream);
+        var isImage = _fileDetectorService.IsImage(fileStream);
+        var isAudio = _fileDetectorService.IsAudio(fileStream);
+        var fileType = _fileDetectorService.GetFileType(fileStream);
+        var hasSameExtension = _fileDetectorService.IsValidExtension(request.File.FileName, fileStream);
 
-        if (!isRecognizableType)
+        return Ok(new
         {
-            return BadRequest(new { message = "Invalid file type" });
-        }
-
-        var fileType = FileTypeValidator.GetFileType(fileStream);
-
-        var response = new UploadResponse
-        {
-            FileExtension = fileType.Extension,
-            FileName = fileType.Name,
-            IsImage = fileStream.IsImage(),
-            IsMp3 = fileStream.Is<Mp3>()
-        };
-
-        return Ok(response);
+            isImage = isImage,
+            isAudio = isAudio,
+            fileType = fileType,
+            hasSameExtension
+        });
     }
 }
